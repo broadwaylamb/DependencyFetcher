@@ -83,12 +83,12 @@ And then pass this instance to the units you're testing.
 
 #### Factoring out hard-coded dependencies
 
-Often you have a large codebase that uses hard-coded dependencies (singletons etc.) all over the place, and you just can't refactor **all** your code at once. `DependencyFetcher ` can be introduced to your codebase incrementally.
+Often you have a large codebase that uses hard-coded dependencies (singletons etc.) all over the place, and you just can't refactor **all** your code at once. `DependencyFetcher` can be introduced to your codebase incrementally.
 
 Suppose you have a view controller that does this (quite common MVC code):
 
 ```swift
-class ViewController: UIViewControlelr {
+class ViewController: UIViewController {
 
   var products: [Product] = []
   
@@ -96,7 +96,7 @@ class ViewController: UIViewControlelr {
     super.viewDidLoad()
     
     APIEndpoint.default.getProducts(onSuccess: { self.products = $0 },
-                                    onError: {error in /*...*/ })
+                                    onError: { error in /*...*/ })
   }
 }
 ```
@@ -116,7 +116,7 @@ extension Service where T == APIEndpointProtocol {
   static let apiEndpoint = Service(APIEndpoint.default)
 }
 
-class ViewController: UIViewControlelr {
+class ViewController: UIViewController {
 
   var products: [Product] = []
   
