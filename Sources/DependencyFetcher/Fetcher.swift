@@ -92,16 +92,13 @@ public final class Fetcher {
   public func fetch<T>(_ service: Service<T>) -> T {
     let serviceID = ObjectIdentifier(service)
     return _syncQueue.sync {
-      let instance = _instances[serviceID]
-      // A workaround for https://bugs.swift.org/browse/SR-9744 on Linux
-      if instance != nil, let instance = instance as? T {
-        return instance
+      // https://bugs.swift.org/browse/SR-9744
+      if let instance = _instances[serviceID] {
+        return instance as! T
       } else {
-        let overridenMakeService = _overrides[serviceID]
         let result: T
-        if overridenMakeService != nil,
-          let inst = overridenMakeService!() as? T {
-          result = inst
+        if let overridenMakeService = _overrides[serviceID] {
+          result = overridenMakeService() as! T
         } else {
           result = service.makeService()
         }
