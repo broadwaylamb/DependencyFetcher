@@ -71,9 +71,8 @@ public final class Service<T> {
 /// call to `fetch(_:)`
 public final class Fetcher {
 
-  private lazy var _syncQueue = DispatchQueue(
-    label: "org.DependencyFetcher.DispatchQueue.\(ObjectIdentifier(self))"
-  )
+  private let _syncQueue =
+      DispatchQueue(label: "com.DependencyFetcher.DispatchQueue")
 
   private let _overrides: [ObjectIdentifier : () -> Any]
 
@@ -93,12 +92,21 @@ public final class Fetcher {
   public func fetch<T>(_ service: Service<T>) -> T {
     let serviceID = ObjectIdentifier(service)
     return _syncQueue.sync {
-      if let service = _instances[serviceID] as? T {
-        return service
-      } else {
-        let instance = _overrides[serviceID]?() as? T ?? service.makeService()
-        _instances[serviceID] = instance
+      let instance = _instances[serviceID]
+      // A workaround for https://bugs.swift.org/browse/SR-9744 on Linux
+      if instance != nil, let instance = instance as? T {
         return instance
+      } else {
+        let overridenMakeService = _overrides[serviceID]
+        let result: T
+        if overridenMakeService != nil,
+          let inst = overridenMakeService!() as? T {
+          result = inst
+        } else {
+          result = service.makeService()
+        }
+        _instances[serviceID] = result
+        return result
       }
     }
   }
@@ -142,7 +150,7 @@ extension Fetcher {
     /// You can chain calls to this method:
     ///
     /// ```swift
-    /// let fetcher
+    /// let fetcher = Fetcher
     ///   .create()
     ///   .addOverride(for: Service.logger, makeService: createMockLogger)
     ///   .addOverride(for: Service.database, makeService: createMockDatabase)
@@ -168,7 +176,7 @@ extension Fetcher {
     /// You can chain calls to this method:
     ///
     /// ```swift
-    /// let fetcher
+    /// let fetcher = Fetcher
     ///   .create()
     ///   .addOverride(for: Service.logger, instance: MockLogger())
     ///   .addOverride(for: Service.database, instance: MockDatabase())

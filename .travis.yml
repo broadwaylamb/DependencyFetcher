@@ -18,8 +18,9 @@ matrix:
 
 script:
   - if [[ $POD_LINT == "YES" ]]; then
+      gem install cocoapods --pre;
       pod repo update --silent;
-      pod lib lint;
+      pod lib lint --verbose;
     fi
   - if [[ $RUN_TESTS == "YES" ]]; then
       eval .scripts/ci.sh;
